@@ -15,7 +15,7 @@ var startDownload = function (data, filename) {
 	var url = window.URL.createObjectURL(blob);
 	var saveas = document.createElement('a');
 	saveas.href = url;
-	saveas.style.display = 'none';
+	//saveas.style.display = 'none';
 	document.body.appendChild(saveas);
 	saveas.download = filename;
 	saveas.click();
@@ -23,22 +23,24 @@ var startDownload = function (data, filename) {
 	document.addEventListener('unload', function () { window.URL.revokeObjectURL(url); });
 };
 
+var asses = [];
 window.addEventListener('load', function () {
 	document.onclick = function(e){
 		var evt = e || window.event;
 		var target = evt.target || evt.srcElement;
-		console.log(target.id);
+		target.id?console.info(target.id):0;
 		if(target.id.indexOf('down')+1){
-			startDownload
 
+			console.log(asses)
+			for(){
+
+			}
 		}
 	};
-
-		var upload = document.querySelector('#file');
+	var upload = document.querySelector('#file');
 	upload.addEventListener('change', function () {
 		var files = upload.files;
 		var name = [];
-		var res = [];
 		for(i=0;i<files.length;i++){
 			name.push(files[i].name);
 		}
@@ -47,8 +49,9 @@ window.addEventListener('load', function () {
 			if (/\.(ass)$/i.test(file.name) ) {
 				var reader = new FileReader();
 				reader.addEventListener("load", function () {
-					res.push(reader);
 					//console.log(reader.result)
+					asses.push(reader.result);
+
 					var node = document.createElement('PRE');
 					node.innerText = reader.result;
 					document.getElementsByTagName('body')[0].appendChild(node)
