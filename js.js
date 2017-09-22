@@ -33,15 +33,19 @@ window.addEventListener('load', function () {
 			if (/\.(ass)$/i.test(file.name) ) {			// 确保 `file.name` 符合我们要求的扩展名
 				var reader = new FileReader();
 				reader.addEventListener("load", function () {
-					asses.push({'name':file.name,'content':reader.result});
-					var node = document.createElement('PRE');
-					node.innerText = reader.result;
-					document.getElementsByTagName('body')[0].appendChild(node);
+
 					var obj = {};
 					obj.name = file.name;
 					obj.PlayResX = parseInt(matchAgain(matchAgain(reader.result,/(?=PlayResX).*/),/\d+/));
 					obj.PlayResY = parseInt(matchAgain(matchAgain(reader.result,/(?=PlayResY).*/),/\d+/));
 					config.push(obj);
+
+					asses.push({'name':file.name,'content':reader.result});
+					var node = document.createElement('input');
+					node.type = 'text';
+					node.placeholder = obj.PlayResX;
+					node.name = 'name_'+file.name.replace(/\.[^.]*$/, '');
+					document.getElementsByTagName('body')[0].appendChild(node);
 				}, false);
 				reader.readAsText(file);
 			}else swal('请选择扩展名为“*.ass”的文件！')
