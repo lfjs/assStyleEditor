@@ -1,14 +1,6 @@
 /**
  * Created by JS-3 on 2017/8/18.
  */
-var gotFile = function (name, content) {
-	var danmaku = parseFile(content);
-	var ass = generateASS(setPosition(danmaku), {
-		'title': document.title,
-		'ori': name
-	});
-	startDownload('\ufeff' + ass, name.replace(/\.[^.]*$/, '') + '.ass');
-};
 var startDownload = function (data, filename) {
 	var blob = new Blob([data], { type: 'application/octet-stream' });
 	var url = window.URL.createObjectURL(blob);
@@ -41,11 +33,39 @@ window.addEventListener('load', function () {
 					config.push(obj);
 
 					asses.push({'name':file.name,'content':reader.result});
-					var node = document.createElement('input');
-					node.type = 'text';
-					node.placeholder = obj.PlayResX;
-					node.name = 'name_'+file.name.replace(/\.[^.]*$/, '');
-					document.getElementsByTagName('body')[0].appendChild(node);
+
+					var tpl=document.getElementById("tpl");
+					var cln=tpl.cloneNode(true);
+
+					var inputAll = [];
+					for(x in obj){
+						if(x == 'name'){
+							cln.id = x + '_' + obj.name.replace(/\.[^.]*$/, '');
+							continue
+						}
+						cln.children[0].style[matchStyle(x)] = obj[x] + 'px';
+
+						//console.log(x+'---'+obj[x]);
+						var input = document.createElement('input');
+						input.type = 'text';
+						input.value = obj[x];
+						input.addEventListener('focus',function(){
+							this.focusInput = true;
+						});
+						input.addEventListener('blur',function(){
+							this.focusInput = false;
+						});
+						input.id = x + '_' + obj.name.replace(/\.[^.]*$/, '');
+						input.title = matchStyle(x);
+
+						input.name = 'name_' + obj.name.replace(/\.[^.]*$/, '');
+						inputAll.push(input);
+					}
+					for(i=0;i<inputAll.length;i++){
+						cln.children[0].children[0].appendChild(inputAll[i]);
+					}
+
+					document.getElementsByTagName('body')[0].appendChild(cln);
 				}, false);
 				reader.readAsText(file);
 			}else swal('请选择扩展名为“*.ass”的文件！')
@@ -53,7 +73,7 @@ window.addEventListener('load', function () {
 		if (files) {
 			[].forEach.call(files, readAndPreview);
 		}
-		console.log(asses);
+		//console.log(asses);
 		//upload.value = '';
 	});
 	document.onclick = function(e){
@@ -65,39 +85,72 @@ window.addEventListener('load', function () {
 			for(i=0;i<asses.length;i++){
 				startDownload('\ufeff' + asses[i].content, asses[i].name.replace(/\.[^.]*$/, '') + '.ass');
 			}
+		}else if(target.className.indexOf('full')+1){
+			if (document.fullscreenEnabled || document.webkitFullscreenEnabled || document.mozFullScreenEnabled || document.msFullscreenEnabled) {
+				//console.log(e);
+				(function locateParent(obj){
+					if(obj.parentNode.id.indexOf('name_')+1||obj.parentNode.id.indexOf('tpl')+1){
+						if (obj.parentNode.requestFullscreen) switchFullScr(obj.parentNode);
+						else if (obj.parentNode.webkitRequestFullscreen) switchFullScr(obj.parentNode);
+						else if (obj.parentNode.mozRequestFullScreen) switchFullScr(obj.parentNode);
+						else if (obj.parentNode.msRequestFullscreen) switchFullScr(obj.parentNode);
+						return
+					}
+					locateParent(obj.parentNode)
+				})(target);
+			}else swal('您使用的浏览器可能并不支持全屏！')
 		}else if(target.id.indexOf('show')+1){
 			console.log(config);
 		}
 	};
 });
+
+var switchFullScr = function(obj){
+	if(obj.fullScr){
+		if (document.exitFullscreen) document.exitFullscreen();
+		else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
+		else if (document.mozCancelFullScreen) document.mozCancelFullScreen();
+		else if (document.msExitFullscreen) document.msExitFullscreen();
+		obj.fullScr = false;
+	}else{
+		if (obj.requestFullscreen) obj.requestFullscreen();
+		else if (obj.webkitRequestFullscreen) obj.webkitRequestFullscreen();
+		else if (obj.mozRequestFullScreen) obj.mozRequestFullScreen();
+		else if (obj.msRequestFullscreen) obj.msRequestFullscreen();
+		obj.fullScr = true;
+	}
+
+};
+var matchStyle = function(assStyle){
+	switch (assStyle) {
+		case 'PlayResX': return "width";
+		case 'PlayResY': return "height";
+	}
+};
 var matchAgain = function (text,regex) {                      //从一行中提取数字
 	var reg = new RegExp(regex,"g");
 	return text.toString().match(reg)||0;
+};
+var pushChange = function(num,name,title){
+	//console.log(title);
+	var temp = document.getElementById(name);
+	temp.children[0].style[title] = num+'px'
 };
 // Handle keyboard controls
 var keysDown = {};
 addEventListener("keydown", function (e) {
 	keysDown[e.keyCode] = true;
-	if(inP.focusInput){
+	if(e.target.focusInput){
 		if (38 in keysDown ) { // Player holding up || w
-			//console.log(e.keyCode)
-			//console.log(inP.value++)
-			inP.value++
+			e.target.value++;
+			pushChange(e.target.value,e.target.name,e.target.title)
 		}
 		if (40 in keysDown ) { // Player holding down || s
-			//console.log(e.keyCode);
-			inP.value--
+			e.target.value--;
+			pushChange(e.target.value,e.target.name,e.target.title)
 		}
 	}
 }, false);
 addEventListener("keyup", function (e) {
 	delete keysDown[e.keyCode];
 }, false);
-inP.addEventListener("focus", function (e) {
-	this.focusInput = true;
-	//console.log([inP])
-});
-inP.addEventListener("blur", function (e) {
-	this.focusInput = false;
-	//console.log([inP])
-});
