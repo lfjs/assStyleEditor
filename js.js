@@ -25,18 +25,31 @@ window.addEventListener('load', function () {
 			if (/\.(ass)$/i.test(file.name) ) {			// 确保 `file.name` 符合我们要求的扩展名
 				var reader = new FileReader();
 				reader.addEventListener("load", function () {
-
 					var obj = {};
 					obj.name = file.name;
 					obj.PlayResX = parseInt(matchAgain(matchAgain(reader.result,/(?=PlayResX).*/),/\d+/));
 					obj.PlayResY = parseInt(matchAgain(matchAgain(reader.result,/(?=PlayResY).*/),/\d+/));
+					obj.style = [];
+					var tempStyle = matchAgain(reader.result,/[^\w](?=style).*:.*/);
+					var tempStyleHead = matchAgain(reader.result,/(?=format).*:.*Encoding/);
+					var tempStyleHeadArr = tempStyleHead[0].replace(/format.*:\s*/i,'').match(/[^,|\s]+?(?=,)|\w+$/g);
+
+					//console.log(tempStyleHead);
+					for(i=0;i<tempStyle.length;i++){
+						var objStyle = {};
+						for(j=0;j<tempStyleHeadArr.length;j++){
+							objStyle[tempStyleHeadArr[j]] = (tempStyle[i].replace(/style.*:\s*/i,'').match(/[^,|\s]+?(?=,)|\d+$/g))[j]
+						}
+						obj.style.push(objStyle);
+					}
+					//console.log(matchAgain(reader.result,/(?=style).*:.*/)[0].replace(/style.*:\s*/i,''));
 					config.push(obj);
+					console.log(obj);
 
 					asses.push({'name':file.name,'content':reader.result});
-
 					var tpl=document.getElementById("tpl");
 					var cln=tpl.cloneNode(true);
-
+					//tpl.style.display = 'none';
 					var inputAll = [];
 					for(x in obj){
 						if(x == 'name'){
@@ -44,7 +57,6 @@ window.addEventListener('load', function () {
 							continue
 						}
 						cln.children[0].style[matchStyle(x)] = obj[x] + 'px';
-
 						//console.log(x+'---'+obj[x]);
 						var input = document.createElement('input');
 						input.type = 'text';
@@ -57,14 +69,12 @@ window.addEventListener('load', function () {
 						});
 						input.id = x + '_' + obj.name.replace(/\.[^.]*$/, '');
 						input.title = matchStyle(x);
-
 						input.name = 'name_' + obj.name.replace(/\.[^.]*$/, '');
 						inputAll.push(input);
 					}
 					for(i=0;i<inputAll.length;i++){
 						cln.children[0].children[0].appendChild(inputAll[i]);
 					}
-
 					document.getElementsByTagName('body')[0].appendChild(cln);
 				}, false);
 				reader.readAsText(file);
@@ -104,7 +114,6 @@ window.addEventListener('load', function () {
 		}
 	};
 });
-
 var switchFullScr = function(obj){
 	if(obj.fullScr){
 		if (document.exitFullscreen) document.exitFullscreen();
@@ -119,7 +128,10 @@ var switchFullScr = function(obj){
 		else if (obj.msRequestFullscreen) obj.msRequestFullscreen();
 		obj.fullScr = true;
 	}
-
+};
+var matchV4Style = function(cc1,cc2){
+	var reg = new RegExp(/(?=style).*:.*/,"gi");
+	return console.log(cc1.match(reg));
 };
 var matchStyle = function(assStyle){
 	switch (assStyle) {
@@ -128,7 +140,7 @@ var matchStyle = function(assStyle){
 	}
 };
 var matchAgain = function (text,regex) {                      //从一行中提取数字
-	var reg = new RegExp(regex,"g");
+	var reg = new RegExp(regex,"gi");
 	return text.toString().match(reg)||0;
 };
 var pushChange = function(num,name,title){
