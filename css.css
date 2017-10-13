@@ -88,3 +88,8 @@ div:-ms-fullscreen::backdrop {
 .table-striped>tbody>tr:nth-child(odd)>td{
 
 }
+{
+
+	padding: 15px 0;
+
+}

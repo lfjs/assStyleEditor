@@ -89,10 +89,10 @@ window.addEventListener('load', function () {
 								for(x in obj.style[0]){
 									if(x.indexOf('Fontsize')+1){
 										parentObj.children[i].style[matchStyle(x)] = ((tpl.clientHeight*obj.style[0][x])/obj.PlayResY)+'px';
-										console.log(x);
-										console.log(obj.style[0][x]);
-										console.log(obj.PlayResY);
-										console.log(tpl.clientHeight);
+										//console.log(x);
+										//console.log(obj.style[0][x]);
+										//console.log(obj.PlayResY);
+										//console.log(tpl.clientHeight);
 										continue
 
 									}
@@ -123,12 +123,14 @@ window.addEventListener('load', function () {
 		if(target.id.indexOf('down')+1){
 			console.log(config);
 			for(i=0;i<config.length;i++){
-				var aaa = function(aaa1){
-					var temp = aaa1.content.replace(/PlayResX.*/i,'PlayResX:'+config[i].PlayResX);
+
+				var pushConfig = function(obj){
+					var temp = obj.content.replace(/PlayResX.*/i,'PlayResX:'+config[i].PlayResX);
 					temp = temp.replace(/PlayResY.*/i,'PlayResY:'+config[i].PlayResY);
-					var s0 = aaa1.style[0];
-					var bbb = function(bbb1){
-						var bTemp = bbb1.replace(/ /g,'').split(/,/);
+					var s0 = obj.style[0];
+
+					var pushStyle = function(styleText){
+						var bTemp = styleText.replace(/ /g,'').split(/,/);
 						var str1 = 'Style:';
 
 						for(j=0;j<bTemp.length;j++){
@@ -139,14 +141,13 @@ window.addEventListener('load', function () {
 						}
 						return str1
 					};
-					var str = bbb(' Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding');
+					var str = pushStyle(' Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding');
 					console.log(str);
-					//aaa1.replace(/PlayResY.*/i,'PlayResY:'+'66666');
 					temp = temp.replace(/style:.*,.*/i,str);
 
 					return temp
 				};
-				console.log('\ufeff' + aaa(config[i]));
+				console.log('\ufeff' + pushConfig(config[i]));
 
 				//startDownload('\ufeff' + aaa(config[i]), config[i].name.replace(/\.[^.]*$/, '') + '.ass');
 			}
