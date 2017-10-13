@@ -31,6 +31,8 @@
 	display: table-cell;
 	vertical-align: bottom;
 
+	position: relative;
+
 }
 .full{
 
@@ -40,6 +42,10 @@
 	padding: 5px;
 	margin: 5px;
 	cursor: pointer;
+
+	position: absolute;
+	right: 0;
+	bottom: 0;
 
 }
 .full:hover{
@@ -75,6 +81,10 @@ div:-ms-fullscreen::backdrop {
 	background-color: aquamarine;
 
 }
-.item .table{
+.item:nth-child(odd){
+
+	background-color: #ececec;
+}
+.table-striped>tbody>tr:nth-child(odd)>td{
 
 }
