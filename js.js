@@ -41,7 +41,6 @@ window.addEventListener('load', function () {
 						obj.style.push(objStyle);
 					}
 					config.push(obj);
-
 				//克隆示例备用
 					var tpl=document.getElementById("tpl");
 					var cln=tpl.cloneNode(true);
@@ -80,13 +79,27 @@ window.addEventListener('load', function () {
 						cln.children[0].children[0].appendChild(inputAll[i]);
 					}
 				//定位修饰字幕元素
+					//(function locateChild(parentObj){
+					//	if(parentObj.className.indexOf(frameConfig.tagName)+1){
+					//		parentObj.innerText = tar.innerText;
+					//		return
+					//	}
+					//	if(parentObj.children.length == 0) return;
+					//	for(i=0;i<parentObj.children.length;i++){
+					//		locateChild(parentObj.children[i])
+					//	}
+					//})(cln)
 					(function locateChild(parentObj){
 						for(i=0;i<parentObj.children.length;i++){
 							if(parentObj.children[i].id.indexOf('sub')+1){
 								parentObj.children[i].id = 'sub_' + file.name.replace(/\.[^.]*$/, '');
 								//console.log(parentObj.children[i]);
 								//parentObj.children[i].style.fontSize = obj.style[0].Fontsize + 'px';
+							//先娶第一个样式测试
 								for(x in obj.style[0]){
+									//console.log(x);
+									//console.log(parentObj.children[i]);
+								//字幕字号适应元素尺寸
 									if(x.indexOf('Fontsize')+1){
 										parentObj.children[i].style[matchStyle(x)] = ((tpl.clientHeight*obj.style[0][x])/obj.PlayResY)+'px';
 										//console.log(x);
@@ -94,17 +107,49 @@ window.addEventListener('load', function () {
 										//console.log(obj.PlayResY);
 										//console.log(tpl.clientHeight);
 										continue
-
+									}
+								//定义描边样式
+									if(x == 'Outline'){
+										(function locateChildA(locateObj){
+											for(j=0;j<locateObj.children.length;j++){
+												if(locateObj.children[j].className.indexOf('stroke')+1){
+													locateObj.children[j].style[matchStyle(x)] = obj.style[0][x] *2 +'px';
+													return
+												}
+												if(locateObj.children.length == 0) return;
+												locateChildA(locateObj.children[j])
+											}
+										})(parentObj.children[i]);
+										//locateChildA(parentObj.children[i],'className','stroke').style[matchStyle(x)] = obj.style[0][x] *2 +'px';
+										continue
+									}
+								//描边颜色
+									if(x == 'OutlineColour'){
+										(function locateChildA(locateObj){
+											for(j=0;j<locateObj.children.length;j++){
+												if(locateObj.children[j].className.indexOf('stroke')+1){
+													var rgb = obj.style[0][x].match(/.{2}/g);
+													locateObj.children[j].style[matchStyle(x)] = '#'+rgb[4]+rgb[3]+rgb[2];
+													locateObj.children[j].style.opacity = ((256-parseInt(rgb[1],16))*(1/256)).toFixed(2);
+													return
+												}
+												if(locateObj.children.length == 0) return;
+												locateChildA(locateObj.children[j])
+											}
+										})(parentObj.children[i]);
+										//locateChildA(parentObj.children[i],'className','stroke').style[matchStyle(x)] = '#'+obj.style[0][x].match(/\w{6}\b/)[0];
+										//console.log(obj.style[0][x].match(/\w{6}\b/)[0]);
+										continue
 									}
 									parentObj.children[i].style[matchStyle(x)] = parseInt(obj.style[0][x])?obj.style[0][x]+'px': obj.style[0][x]
 								}
 								return
 							}
+							if(parentObj.children.length == 0) return;
 							locateChild(parentObj.children[i])
 						}
 					})(cln);
 					document.getElementsByTagName('body')[0].appendChild(cln);
-
 				}, false);
 				reader.readAsText(file);
 			}else swal('请选择扩展名为“*.ass”的文件！')
@@ -123,32 +168,25 @@ window.addEventListener('load', function () {
 		if(target.id.indexOf('down')+1){
 			console.log(config);
 			for(i=0;i<config.length;i++){
-
 				var pushConfig = function(obj){
 					var temp = obj.content.replace(/PlayResX.*/i,'PlayResX:'+config[i].PlayResX);
 					temp = temp.replace(/PlayResY.*/i,'PlayResY:'+config[i].PlayResY);
 					var s0 = obj.style[0];
-
 					var pushStyle = function(styleText){
 						var bTemp = styleText.replace(/ /g,'').split(/,/);
 						var str1 = 'Style:';
-
 						for(j=0;j<bTemp.length;j++){
-
 							j==0?void(0):str1 +=',';
 							str1 +=s0[bTemp[j]];
-
 						}
 						return str1
 					};
 					var str = pushStyle(' Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding');
 					console.log(str);
 					temp = temp.replace(/style:.*,.*/i,str);
-
 					return temp
 				};
 				console.log('\ufeff' + pushConfig(config[i]));
-
 				//startDownload('\ufeff' + aaa(config[i]), config[i].name.replace(/\.[^.]*$/, '') + '.ass');
 			}
 	//全屏
@@ -173,17 +211,16 @@ window.addEventListener('load', function () {
 	};
 });
 
-// 字符串
-var funStr = function (fun) {
-	return fun.toString().split(/\r\n|\n|\r/).slice(1, -1).join('\n');
-};
-
 var matchStyle = function(assStyle){
 	switch (assStyle) {
 		case 'PlayResX': return "width";
 		case 'PlayResY': return "height";
+		//迷幻的Fontsize，貌似跟字体有关，屏幕测量与数值永远不符
 		case 'Fontsize': return "fontSize";
 		case 'Fontname': return "fontFamily";
+		//描边程度：严格按照PlayResY比例，数值就是从文字出发草描边结束的单方向偏移距离，text-stroke-width是双向偏移
+		case 'Outline': return "-webkit-text-stroke-width";
+		case 'OutlineColour': return "-webkit-text-stroke-color";
 	}
 };
 //全屏切换

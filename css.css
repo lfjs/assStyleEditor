@@ -1,7 +1,10 @@
+body{
+	font-family:  'Microsoft Yahei','Helvetica Neue', Helvetica, Arial,  'Hiragino Sans GB', 'Heiti SC', 'WenQuanYi Micro Hei', sans-serif;
+
+}
 *{
     margin: 0;
     padding: 0;
-	font: 16px 'Microsoft Yahei','Helvetica Neue', Helvetica, Arial,  'Hiragino Sans GB', 'Heiti SC', 'WenQuanYi Micro Hei', sans-serif;
 	line-height: 1;
 
 }
@@ -9,6 +12,18 @@
 
 	line-height: 3;
 	min-width: 100px;
+
+}
+.text{
+
+	position: absolute;
+	width: 100%;
+	z-index: 1;
+
+}
+.stroke{
+	-webkit-text-stroke-width: 14px ;
+	-webkit-text-stroke-color: #f00;
 
 }
 .bg{
