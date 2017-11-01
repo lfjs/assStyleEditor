@@ -23,9 +23,9 @@ window.addEventListener('load', function () {
 				var reader = new FileReader();
 				reader.addEventListener("load", function () {
 				//ass开头[Script Info]区
-
 					var obj = {};
-					obj.name = file.name.replace(/\.[^.]*$/, '');
+					obj.name = file.name.replace(/\.ass$/, '');
+					obj.sn = obj.name.replace(/[^\w]/g, '_');
 					obj.PlayResX = parseInt(matchAgain(matchAgain(reader.result,/(?=PlayResX).*/),/\d+/));
 					obj.PlayResY = parseInt(matchAgain(matchAgain(reader.result,/(?=PlayResY).*/),/\d+/));
 					obj.content = reader.result;
@@ -34,10 +34,10 @@ window.addEventListener('load', function () {
 					var tempStyle = matchAgain(reader.result,/[^\w](?=style).*:.*/);
 					var tempStyleHead = matchAgain(reader.result,/(?=format).*:.*Encoding/);
 					var tempStyleHeadArr = tempStyleHead[0].replace(/format.*:\s*/i,'').match(/[^,|\s]+?(?=,)|\w+$/g);
-					for(i=0;i<tempStyle.length;i++){
+					for(var i=0;i<tempStyle.length;i++){
 						var objStyle = {};
-						for(j=0;j<tempStyleHeadArr.length;j++){
-							objStyle[tempStyleHeadArr[j]] = (tempStyle[i].replace(/style.*:\s*/i,'').match(/[^,|\s]+?(?=,)|\d+$/g))[j]
+						for(var j=0;j<tempStyleHeadArr.length;j++){
+							objStyle[tempStyleHeadArr[j]] = (tempStyle[i].replace(/(style.*:\s*|\s)/gi,'').match(/[^,]+?(?=,)|\d+$/g))[j]
 						}
 						obj.style.push(objStyle);
 					}
@@ -47,31 +47,63 @@ window.addEventListener('load', function () {
 					var cln=tpl.cloneNode(true);
 					//tpl.style.display = 'none';
 					var inputAll = [];
+					var radioAll = document.createElement('div');
 				//输入框装填
 					for(x in obj){
 						if(x == 'name'){
-							cln.id = x + '_' + obj.name.replace(/\.[^.]*$/, '');
+							cln.id = 'name_' + obj.sn;
 							continue
 						}else if(x == 'content') continue;
 					//字幕样式装填
 						if(x == 'style'){
-							for(y in obj.style[0]){
-								var inputStyle = document.createElement('input');
-								inputStyle.type = 'text';
-
-								inputStyle.value = obj.style[0][y];
-
-								inputStyle.addEventListener('focus',function(){
-									this.focusInput = true;
-								});
-								inputStyle.addEventListener('blur',function(){
-									this.focusInput = false;
-								});
-
-								inputStyle.id = y + '_' + obj.name.replace(/\.[^.]*$/, '') + '_style_0';
-								inputStyle.title = matchStyle(y);
-								inputStyle.name = obj.name.replace(/\.[^.]*$/, '');
-								inputAll.push(inputStyle);
+							for(var z=0;z<obj.style.length;z++) {
+								var styleZ = document.createElement('div');
+								styleZ.id = obj.sn + '_style_'+obj.style[z].Name.replace(/\s/,'');
+								//styleZ.className = obj.sn + '_style';
+								styleZ.className = obj.sn + '_style';
+								var radioZ = document.createElement('input');
+								radioZ.type = 'radio';
+								radioZ.onclick = function(e){
+									var styleSet = document.getElementsByClassName(obj.sn + '_style');
+									for(var i=0;i<styleSet.length;i++){
+										styleSet[i].style.display = 'none';
+										if(styleSet[i].id == (obj.sn+'_style_'+e.target.value)){
+											styleSet[i].style.display = '';
+											for(var j=0;j<styleSet[i].children.length;j++){
+												pushChange(styleSet[i].children[j].value, styleSet[i].children[j].name, styleSet[i].children[j].title, styleSet[i].children[j].id)
+											}
+										}
+									}
+								};
+								radioZ.value = obj.style[z].Name.replace(/\s/,'');
+								radioZ.name =  obj.sn + '_style';
+								var divZ = document.createElement('span');
+								divZ.innerText = obj.style[z].Name.replace(/\s/,'');
+								var labelZ = document.createElement('label');
+								labelZ.appendChild(radioZ);
+								labelZ.appendChild(divZ);
+							//字幕样式输入框
+								for (y in obj.style[z]) {
+									var inputStyle = document.createElement('input');
+									inputStyle.type = 'text';
+									inputStyle.value = obj.style[z][y];
+									inputStyle.addEventListener('focus', function () {
+										this.focusInput = true;
+									});
+									inputStyle.addEventListener('blur', function () {
+										this.focusInput = false;
+										pushChange(this.value, this.name, this.title, this.id)
+									});
+									inputStyle.id = y + '_' + obj.sn + '_style_'+z;
+									inputStyle.title = matchStyle(y);
+									inputStyle.name = obj.sn;
+									//inputAll.push(inputStyle);
+									styleZ.appendChild(inputStyle);
+								}
+								inputAll.push(styleZ);
+								radioAll.appendChild(labelZ);
+							//载入默认显示default
+								(obj.style[z].Name.indexOf('Default')+1)>0?radioZ.click():styleZ.style.display = 'none';
 							}
 							continue;
 						}
@@ -85,11 +117,12 @@ window.addEventListener('load', function () {
 						input.addEventListener('blur',function(){
 							this.focusInput = false;
 						});
-						input.id = x + '_' + obj.name.replace(/\.[^.]*$/, '');
+						input.id = x + '_' + obj.sn;
 						input.title = matchStyle(x);
-						input.name = obj.name.replace(/\.[^.]*$/, '');
+						input.name = obj.sn;
 						inputAll.push(input);
 					}
+					cln.children[0].children[1].children[0].appendChild(radioAll);
 					for(i=0;i<inputAll.length;i++){
 						cln.children[0].children[1].children[0].appendChild(inputAll[i]);
 					}
@@ -161,24 +194,29 @@ window.addEventListener('load', function () {
 	//下载
 		if(target.id.indexOf('down')+1){
 			console.log(config);
-			for(i=0;i<config.length;i++){
+			for(var i=0;i<config.length;i++){
 				var pushConfig = function(obj){
-					var temp = obj.content.replace(/PlayResX.*/i,'PlayResX:'+config[i].PlayResX);
-					temp = temp.replace(/PlayResY.*/i,'PlayResY:'+config[i].PlayResY);
-					var s0 = obj.style[0];
+					var contentTemp = obj.content.replace(/PlayResX.*/i,'PlayResX:'+config[i].PlayResX);
+					contentTemp = contentTemp.replace(/PlayResY.*/i,'PlayResY:'+config[i].PlayResY);
+					//var s0 = obj.style[0];
 					var pushStyle = function(styleText){
 						var bTemp = styleText.replace(/ /g,'').split(/,/);
-						var strTemp = 'Style:';
-						for(j=0;j<bTemp.length;j++){
-							j==0?void(0):strTemp +=',';
-							strTemp +=s0[bTemp[j]];
+						var strTemp = '';
+						for(var k=0;k<obj.style.length;k++) {
+							strTemp += '\r\nStyle:';
+							for (var j = 0; j < bTemp.length; j++) {
+								j == 0 ? void(0) : strTemp += ',';
+								strTemp += obj.style[k][bTemp[j]];
+							}
 						}
 						return strTemp
 					};
 					var str = pushStyle(' Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding');
 					console.log(str);
-					temp = temp.replace(/style:.*,.*/i,str);
-					return temp
+					//contentTemp = contentTemp.replace(/style:.*,.*/gi,str);
+					contentTemp = contentTemp.replace(/[^.](?=style).*:.*,.*/gi,'');
+					contentTemp = contentTemp.replace(/((?=format).*:.*Encoding)/gi,"$1"+str);
+					return contentTemp
 				};
 				console.log('\ufeff' + pushConfig(config[i]));
 				startDownload('\ufeff' + pushConfig(config[i]), config[i].name.replace(/\.[^.]*$/, '') + '.ass');
@@ -201,10 +239,14 @@ window.addEventListener('load', function () {
 	//
 		}else if(target.id.indexOf('show')+1){
 			console.log(config);
+			if(config.length > 1){
+				for(var i=1;i<config.length;i++){
+					console.log(isObjectValueEqual(config[0].style[0],config[i].style[0]))
+				}
+			}
 		}
 	};
 });
-
 var matchStyle = function(assStyle){
 	switch (assStyle) {
 		case 'PlayResX': return "width";
@@ -240,12 +282,23 @@ var matchAgain = function (text,regex) {
 };
 //
 var pushChange = function(num,name,title,id){
-	for(var i=0;i<config.length;i++){
-		if(config[i].name == name) config[i].style[0][id.split("_")[0]] = num
+//获取style名
+	var styleName = document.getElementById(id.replace(/^.*?_/,'Name_'));
+
+	if(styleName){
+		for(var i=0;i<config.length;i++){
+			for(var j=0;j<config[i].style.length;j++) {
+				if (config[i].name == name&&(config[i].style[j].Name.replace(/\s/g,'') == styleName.value)) {
+					config[i].style[j][id.split("_")[0]] = num
+				}
+			}
+		}
+	}else{
+		for(var k=0;k<config.length;k++){
+			if (config[k].name == name) config[k][id.split("_")[0]] = num
+		}
 	}
 	var sub = document.getElementById('name_'+name);
-	var tempPlayResY = document.getElementById('PlayResY_'+id.split("_")[1]);
-	var tempFontsize = document.getElementById('Fontsize_'+id.split("_")[1]+'_style_0');
 	;(function locateChild(obj){
 		if(obj.className.indexOf('stroke')+1){
 			if(id.indexOf('Outline_')+1){
@@ -265,10 +318,12 @@ var pushChange = function(num,name,title,id){
 				return
 			}
 			if(id.indexOf('Fontsize_')+1){
+				var tempPlayResY = document.getElementById('PlayResY_'+name);
 				obj.style[title] = ((sub.clientHeight*num)/tempPlayResY.value)+'px';
 				return
 			}
 			if(id.indexOf('PlayResY_')+1){
+				var tempFontsize = document.getElementById('Fontsize_'+name+'_style_0');
 				obj.style.fontSize = ((sub.clientHeight*tempFontsize.value)/num)+'px';
 				return
 			}
@@ -313,4 +368,26 @@ var swErr = function(){
 		button: "关！",
 		icon: "error"
 	});
+};
+var isObjectValueEqual = function (a, b) {
+	// Of course, we can do it use for in
+	// Create arrays of property names
+	var aProps = Object.getOwnPropertyNames(a);
+	var bProps = Object.getOwnPropertyNames(b);
+	// If number of properties is different,
+	// objects are not equivalent
+	if (aProps.length != bProps.length) {
+		return false;
+	}
+	for (var i = 0; i < aProps.length; i++) {
+		var propName = aProps[i];
+		// If values of same property are not equal,
+		// objects are not equivalent
+		if (a[propName] !== b[propName]) {
+			return false;
+		}
+	}
+	// If we made it this far, objects
+	// are considered equivalent
+	return true;
 };
