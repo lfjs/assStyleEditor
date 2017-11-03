@@ -37,7 +37,7 @@ window.addEventListener('load', function () {
 					for(var i=0;i<tempStyle.length;i++){
 						var objStyle = {};
 						for(var j=0;j<tempStyleHeadArr.length;j++){
-							objStyle[tempStyleHeadArr[j]] = (tempStyle[i].replace(/(style.*:\s*|\s)/gi,'').match(/[^,]+?(?=,)|\d+$/g))[j]
+							objStyle[tempStyleHeadArr[j]] = (tempStyle[i].replace(/(style.*:\s*|\n|\r)/gi,'').match(/[^,]+?(?=,)|\d+$/g))[j]
 						}
 						obj.style.push(objStyle);
 					}
@@ -45,6 +45,8 @@ window.addEventListener('load', function () {
 				//克隆示例备用
 					var tpl=document.getElementById("tpl");
 					var cln=tpl.cloneNode(true);
+					cln.children[0].children[0].children[0].innerText = obj.name+'.ass';
+					cln.children[0].children[1].children[0].innerHTML = '';
 					//tpl.style.display = 'none';
 					var inputAll = [];
 					var radioAll = document.createElement('div');
@@ -103,7 +105,7 @@ window.addEventListener('load', function () {
 								inputAll.push(styleZ);
 								radioAll.appendChild(labelZ);
 							//载入默认显示default
-								(obj.style[z].Name.indexOf('Default')+1)>0?radioZ.click():styleZ.style.display = 'none';
+								(obj.style[z].Name == 'Default')?radioZ.click():styleZ.style.display = 'none';
 							}
 							continue;
 						}
@@ -124,6 +126,7 @@ window.addEventListener('load', function () {
 					}
 					cln.children[0].children[1].children[0].appendChild(radioAll);
 					for(i=0;i<inputAll.length;i++){
+
 						cln.children[0].children[1].children[0].appendChild(inputAll[i]);
 					}
 				//定位修饰字幕元素
@@ -214,23 +217,39 @@ window.addEventListener('load', function () {
 					var str = pushStyle(' Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding');
 					console.log(str);
 					//contentTemp = contentTemp.replace(/style:.*,.*/gi,str);
-					contentTemp = contentTemp.replace(/[^.](?=style).*:.*,.*/gi,'');
+					contentTemp = contentTemp.replace(/((?=style).*:.*|\r(?=style).*:.*|\n(?=style).*:.*|\r\n(?=style).*:.*),.*/gi,'');
 					contentTemp = contentTemp.replace(/((?=format).*:.*Encoding)/gi,"$1"+str);
 					return contentTemp
 				};
 				console.log('\ufeff' + pushConfig(config[i]));
-				startDownload('\ufeff' + pushConfig(config[i]), config[i].name.replace(/\.[^.]*$/, '') + '.ass');
+				startDownload('\ufeff' + pushConfig(config[i]), config[i].name + '.ass');
 			}
 	//全屏
 		}else if(target.className.indexOf('full')+1){
 			if (document.fullscreenEnabled || document.webkitFullscreenEnabled || document.mozFullScreenEnabled || document.msFullscreenEnabled) {
 				//console.log(e);
-				(function locateParent(obj){
+				;(function locateParent(obj){
 					if(obj.parentNode.id.indexOf('name_')+1||obj.parentNode.id.indexOf('tpl')+1){
 						if (obj.parentNode.requestFullscreen) switchFullScr(obj.parentNode);
 						else if (obj.parentNode.webkitRequestFullscreen) switchFullScr(obj.parentNode);
 						else if (obj.parentNode.mozRequestFullScreen) switchFullScr(obj.parentNode);
 						else if (obj.parentNode.msRequestFullscreen) switchFullScr(obj.parentNode);
+
+					//定位全屏元素的数据并更新
+						setTimeout(function () {
+							(function locateChild(objParent){
+								if(objParent.id.indexOf('_style_')+1){
+									for(var j=0;j<objParent.children.length;j++){
+										pushChange(objParent.children[j].value, objParent.children[j].name, objParent.children[j].title, objParent.children[j].id)
+									}
+									return
+								}
+								if(objParent.children.length == 0) return;
+								for(var i=0;i<objParent.children.length;i++){
+									locateChild(objParent.children[i])
+								}
+							})(obj.parentNode);
+						}, 500);
 						return
 					}
 					locateParent(obj.parentNode)
@@ -239,11 +258,6 @@ window.addEventListener('load', function () {
 	//
 		}else if(target.id.indexOf('show')+1){
 			console.log(config);
-			if(config.length > 1){
-				for(var i=1;i<config.length;i++){
-					console.log(isObjectValueEqual(config[0].style[0],config[i].style[0]))
-				}
-			}
 		}
 	};
 });
@@ -281,21 +295,59 @@ var matchAgain = function (text,regex) {
 	return text.toString().match(reg)||0;
 };
 //
+var ifSame = document.getElementById('ifSame');
 var pushChange = function(num,name,title,id){
 //获取style名
 	var styleName = document.getElementById(id.replace(/^.*?_/,'Name_'));
 
-	if(styleName){
+	if(styleName){//style区的变动
 		for(var i=0;i<config.length;i++){
 			for(var j=0;j<config[i].style.length;j++) {
-				if (config[i].name == name&&(config[i].style[j].Name.replace(/\s/g,'') == styleName.value)) {
+				if (config[i].sn == name&&(config[i].style[j].Name.replace(/\s/g,'') == styleName.value)) {
+					if(ifSame.checked){
+						for(var u=0;u<config.length;u++){//其他文件中是否存在相同样式
+							if(u==i) continue;
+							if(isObjectValueEqual(config[i].style[j],config[u].style[j])) {
+								config[u].style[j][id.split("_")[0]] = num;
+								var sameParent = document.getElementById('name_'+config[u].sn);
+								;(function locateChild(objParent){//将变更推送到该荧幕的input上
+									if(objParent.id.indexOf(id.split("_")[0]+'_')+1){
+										objParent.value = num;
+										return
+									}
+									if(objParent.children.length == 0) return;
+									for(var i=0;i<objParent.children.length;i++){
+										locateChild(objParent.children[i])
+									}
+								})(sameParent);
+							}
+						}
+					}
 					config[i].style[j][id.split("_")[0]] = num
 				}
 			}
 		}
-	}else{
+	}else{//style外部的变动
 		for(var k=0;k<config.length;k++){
-			if (config[k].name == name) config[k][id.split("_")[0]] = num
+			if (config[k].sn == name) {
+				if(ifSame.checked){
+					for(var v=0;v<config.length;v++){//其他文件中是否存在相同样式
+						if(v==k) continue;
+						config[v][id.split("_")[0]] = num;
+						;(function locateChild(objParent){//将变更推送到该荧幕的input上
+							if(objParent.id.indexOf(id.split("_")[0]+'_')+1){
+								objParent.value = num;
+								return
+							}
+							if(objParent.children.length == 0) return;
+							for(var i=0;i<objParent.children.length;i++){
+								locateChild(objParent.children[i])
+							}
+						})(document.getElementById('name_'+config[v].sn));
+					}
+				}
+				config[k][id.split("_")[0]] = num
+			}
 		}
 	}
 	var sub = document.getElementById('name_'+name);
@@ -339,6 +391,8 @@ var keysDown = {};
 addEventListener("keydown", function (e) {
 	keysDown[e.keyCode] = true;
 	if(e.target.focusInput){
+		//stopBubble();
+
 		if (38 in keysDown ) { // Player holding up || w
 			parseInt(e.target.value)||e.target.value == 0?++e.target.value:swErr();
 			pushChange(e.target.value,e.target.name,e.target.title,e.target.id)
@@ -353,7 +407,8 @@ addEventListener("keydown", function (e) {
 		}
 		if (27 in keysDown ) { //escape
 			e.target.blur();
-			pushChange(e.target.value,e.target.name,e.target.title,e.target.id)
+			//console.log(111);
+			//pushChange(e.target.value,e.target.name,e.target.title,e.target.id)
 		}
 	}
 }, false);
@@ -391,3 +446,33 @@ var isObjectValueEqual = function (a, b) {
 	// are considered equivalent
 	return true;
 };
+
+function getEvent(){
+	if(window.event)    {return window.event;}
+	func=getEvent.caller;
+	while(func!=null){
+		var arg0=func.arguments[0];
+		if(arg0){
+			if((arg0.constructor==Event || arg0.constructor ==MouseEvent
+				|| arg0.constructor==KeyboardEvent)
+				||(typeof(arg0)=="object" && arg0.preventDefault
+				&& arg0.stopPropagation)){
+				return arg0;
+			}
+		}
+		func=func.caller;
+	}
+	return null;
+}
+//阻止冒泡
+function stopBubble()
+{
+	var e=getEvent();
+	if(window.event){
+		e.returnValue=false;//阻止自身行为
+		e.cancelBubble=true;//阻止冒泡
+	}else if(e.preventDefault){
+		e.preventDefault();//阻止自身行为
+		e.stopPropagation();//阻止冒泡
+	}
+}

@@ -97,6 +97,11 @@ div:-ms-fullscreen::backdrop {
 	background-color: aquamarine;
 
 }
+.item{
+
+	padding: 10px;
+
+}
 .item:nth-child(odd){
 
 	background-color: #ececec;
@@ -106,4 +111,11 @@ div:-ms-fullscreen::backdrop {
 }
 input[title="undefined"]{
 	display: none;
+}
+.subTitleCon{
+
+	transition:  .2s;
+	-moz-transition:  .2s; /* Firefox 4 */
+	-webkit-transition:  .2s; /* Safari and Chrome */
+	-o-transition:  .2s; /* Opera */
 }

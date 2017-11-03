@@ -32,36 +32,55 @@
 	<button class="btn" id="down">保存</button>
 	<button class="btn" id="show">显示</button>
 	<!--<img id="ship" src="feature_apogee1.png" alt=""/>-->
-	<!--http://www.6psp.cn/20100714/ssa-ass字幕格式全解析.html-->
 </div>
-<div>
-	<!--<div id="tpl" class="item">-->
-		<!--<div class="table">-->
-			<!--<div class="tableCell">-->
-				<!--<div id="sub">-->
-					<!--<div class="text">字幕字幕字幕字幕字幕</div>-->
-					<!--<div class="stroke">字幕字幕字幕字幕字幕</div>-->
-				<!--</div>-->
-				<!--<div class="full">全屏</div>-->
-			<!--</div>-->
-		<!--</div>-->
-	<!--</div>-->
-	<div id="tpl" class="item">
-		<div class="table">
-			<div class="row">
-				<div class="cell a">top</div>
+<!--<div id="tpl" class="item">-->
+<!--<div class="table">-->
+<!--<div class="tableCell">-->
+<!--<div id="sub">-->
+<!--<div class="text">字幕字幕字幕字幕字幕</div>-->
+<!--<div class="stroke">字幕字幕字幕字幕字幕</div>-->
+<!--</div>-->
+<!--<div class="full">全屏</div>-->
+<!--</div>-->
+<!--</div>-->
+<!--</div>-->
+<div id="tpl" class="item">
+	<div class="table">
+		<div class="row">
+			<div class="cell a">
+				示例文件名.ass
 			</div>
-			<div class="row">
-				<div class="cell b"></div>
+		</div>
+		<div class="row">
+			<div class="cell b">
+				<p>一个正经的示例</p>
+				<p>加载后可调参数将出现在这里</p>
+				<p>你甚至可以用方向键微调其中的一部分</p>
+				<a target="_blank" href="http://github.com/lfjs/assStyleEditor">
+					github仓库
+				</a><br/>
+				<a target="_blank" href="http://www.6psp.cn/20100714/ssa-ass字幕格式全解析.html">
+					具体参数你甚至可以在这里学习
+				</a>
+				<p>
+					<label>
+						<input id="ifSame" type="checkbox" checked/>
+						<span>
+							勾选后，比如修改与其他文件完全相同的‘default’样式，
+							将作用于所有文件的‘default’（尽管假荧幕上的效果并没变、、）
+						</span>
+					</label>
+				</p>
+
 			</div>
-			<div class="row">
-				<div class="cell c">
-					<div id="sub">
-						<div class="text">字幕subtitleサブタイトル자막</div>
-						<div class="stroke">字幕subtitleサブタイトル자막</div>
-					</div>
-					<div class="full">全屏</div>
+		</div>
+		<div class="row">
+			<div class="cell c">
+				<div id="sub" class="subTitleCon">
+					<div class="text">字幕subtitleサブタイトル자막</div>
+					<div class="stroke">字幕subtitleサブタイトル자막</div>
 				</div>
+				<div class="full">全屏</div>
 			</div>
 		</div>
 	</div>
