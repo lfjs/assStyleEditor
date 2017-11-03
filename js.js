@@ -105,7 +105,8 @@ window.addEventListener('load', function () {
 								inputAll.push(styleZ);
 								radioAll.appendChild(labelZ);
 							//载入默认显示default
-								(obj.style[z].Name == 'Default')?radioZ.click():styleZ.style.display = 'none';
+							//	(obj.style[z].Name == 'Default')?radioZ.click():styleZ.style.display = 'none';
+								(z==0)?radioZ.click():styleZ.style.display = 'none';
 							}
 							continue;
 						}
