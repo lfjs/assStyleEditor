@@ -259,6 +259,8 @@ window.addEventListener('load', function () {
 	//
 		}else if(target.id.indexOf('show')+1){
 			console.log(config);
+		}else if(target.id.indexOf('test')+1){
+			console.log('test2222');
 		}
 	};
 });
